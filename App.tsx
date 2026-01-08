@@ -3,7 +3,7 @@ import { analyzeFoodImage } from './services/geminiService';
 import { FoodEntry, ViewState, DayStats } from './types';
 import MacroChart from './components/MacroChart';
 import WeeklyChart from './components/WeeklyChart';
-import { CameraIcon, HomeIcon, CalendarIcon, PlusIcon, FlameIcon, ChevronLeftIcon, GearIcon } from './components/Icon';
+import { CameraIcon, HomeIcon, CalendarIcon, PlusIcon, FlameIcon, ChevronLeftIcon } from './components/Icon';
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState>('dashboard');
@@ -12,12 +12,6 @@ const App: React.FC = () => {
   const [analyzedData, setAnalyzedData] = useState<FoodEntry | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  // Initialize API Key from localStorage or environment variable
-  const [apiKey, setApiKey] = useState<string>(() => {
-    return localStorage.getItem('nutrisnap_api_key') || process.env.API_KEY || '';
-  });
-  const [tempApiKey, setTempApiKey] = useState<string>('');
-
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load from local storage on mount
@@ -30,8 +24,6 @@ const App: React.FC = () => {
         console.error("Failed to parse history", e);
       }
     }
-    // Set temp key on mount for display
-    setTempApiKey(localStorage.getItem('nutrisnap_api_key') || process.env.API_KEY || '');
   }, []);
 
   // Save to local storage whenever entries change
@@ -39,22 +31,9 @@ const App: React.FC = () => {
     localStorage.setItem('nutrisnap_entries', JSON.stringify(entries));
   }, [entries]);
 
-  const handleSaveApiKey = () => {
-    localStorage.setItem('nutrisnap_api_key', tempApiKey);
-    setApiKey(tempApiKey);
-    setView('dashboard');
-    alert('Chave API salva com sucesso!');
-  };
-
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    if (!apiKey) {
-      alert("Por favor, configure sua chave API do Google Gemini nas configurações antes de continuar.");
-      setView('settings');
-      return;
-    }
 
     const reader = new FileReader();
     reader.onloadend = async () => {
@@ -67,8 +46,7 @@ const App: React.FC = () => {
         const mimeType = file.type;
         const base64Data = base64String.split(',')[1];
         
-        // Pass the dynamic API key here
-        const result = await analyzeFoodImage(base64Data, mimeType, apiKey);
+        const result = await analyzeFoodImage(base64Data, mimeType);
         
         const newEntry: FoodEntry = {
           ...result,
@@ -79,11 +57,7 @@ const App: React.FC = () => {
         
         setAnalyzedData(newEntry);
       } catch (error) {
-        let message = "Erro ao analisar imagem.";
-        if (error instanceof Error) {
-            message = error.message;
-        }
-        alert(message);
+        alert("Erro ao analisar imagem. Tente novamente.");
         console.error(error);
         setView('dashboard');
       } finally {
@@ -165,16 +139,8 @@ const App: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-800">Olá!</h1>
             <p className="text-gray-500 text-sm">Pronto para comer saudável?</p>
           </div>
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setView('settings')}
-              className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-gray-500 border border-gray-200 shadow-sm active:scale-95 transition-transform"
-            >
-              <GearIcon className="w-5 h-5" />
-            </button>
-            <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold">
-              NS
-            </div>
+          <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold">
+            NS
           </div>
         </header>
 
@@ -439,78 +405,6 @@ const App: React.FC = () => {
     );
   };
 
-  const renderSettings = () => {
-    return (
-      <div className="pb-24 animate-fade-in">
-        <div className="flex items-center mb-6">
-          <button onClick={() => setView('dashboard')} className="p-2 -ml-2 rounded-full hover:bg-gray-200 text-gray-600">
-            <ChevronLeftIcon className="w-6 h-6" />
-          </button>
-          <h1 className="text-xl font-bold text-gray-800 ml-2">Configurações</h1>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center gap-3 mb-4">
-             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-               <GearIcon className="w-6 h-6" />
-             </div>
-             <div>
-               <h3 className="font-bold text-gray-800">Chave API do Gemini</h3>
-               <p className="text-xs text-gray-500">Necessária para analisar as fotos</p>
-             </div>
-          </div>
-
-          <p className="text-sm text-gray-600 mb-4">
-             Para usar o NutriSnap, você precisa de uma chave de API do Google Gemini.
-             <br />
-             <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-medium mt-1 inline-block">
-               Obter chave gratuitamente aqui
-             </a>
-          </p>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Sua Chave API</label>
-              <input 
-                type="password" 
-                value={tempApiKey}
-                onChange={(e) => setTempApiKey(e.target.value)}
-                placeholder="Ex: AIzaSy..."
-                className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
-              />
-            </div>
-
-            <button 
-              onClick={handleSaveApiKey}
-              className="w-full bg-green-600 text-white py-3 rounded-xl font-bold shadow-md active:scale-95 transition-transform"
-            >
-              Salvar Configuração
-            </button>
-            
-            {apiKey && (
-              <button 
-                onClick={() => {
-                   localStorage.removeItem('nutrisnap_api_key');
-                   setApiKey('');
-                   setTempApiKey('');
-                   alert('Chave removida.');
-                }}
-                className="w-full text-red-500 text-sm py-2 hover:bg-red-50 rounded-lg"
-              >
-                Remover Chave Salva
-              </button>
-            )}
-          </div>
-        </div>
-        
-        <div className="mt-8 text-center text-xs text-gray-400">
-          <p>NutriSnap AI v1.0</p>
-          <p>Seus dados são salvos apenas no navegador.</p>
-        </div>
-      </div>
-    );
-  };
-
   // --- Main Render ---
 
   return (
@@ -520,7 +414,6 @@ const App: React.FC = () => {
         {view === 'camera' && renderCameraAnalysis()}
         {view === 'calendar' && renderCalendar()}
         {view === 'details' && renderDetails()}
-        {view === 'settings' && renderSettings()}
       </main>
 
       {/* Hidden File Input */}
@@ -534,7 +427,7 @@ const App: React.FC = () => {
       />
 
       {/* Navigation Bar */}
-      {view !== 'camera' && view !== 'settings' && (
+      {view !== 'camera' && (
         <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-100 p-4 pb-6 flex justify-around items-center z-50">
           <button 
             onClick={() => setView('dashboard')}
