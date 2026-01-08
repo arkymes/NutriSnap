@@ -5,9 +5,10 @@ interface MacroChartProps {
   protein: number;
   carbs: number;
   fats: number;
+  isDarkMode?: boolean;
 }
 
-const MacroChart: React.FC<MacroChartProps> = ({ protein, carbs, fats }) => {
+const MacroChart: React.FC<MacroChartProps> = ({ protein, carbs, fats, isDarkMode = false }) => {
   const data = [
     { name: 'Proteína', value: protein, color: '#3b82f6' }, // Blue
     { name: 'Carboidratos', value: carbs, color: '#22c55e' }, // Green
@@ -17,7 +18,7 @@ const MacroChart: React.FC<MacroChartProps> = ({ protein, carbs, fats }) => {
   // Handle case with no data
   if (protein === 0 && carbs === 0 && fats === 0) {
     return (
-      <div className="flex items-center justify-center h-full w-full bg-gray-50 rounded-full text-gray-400 text-[10px]">
+      <div className={`flex items-center justify-center h-full w-full rounded-full text-[10px] ${isDarkMode ? 'bg-gray-800 text-gray-500' : 'bg-gray-50 text-gray-400'}`}>
         --
       </div>
     );
@@ -43,7 +44,16 @@ const MacroChart: React.FC<MacroChartProps> = ({ protein, carbs, fats }) => {
           </Pie>
           <Tooltip 
             formatter={(value: number) => [`${value}g`, '']}
-            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px', padding: '8px' }}
+            contentStyle={{ 
+              borderRadius: '8px', 
+              border: 'none', 
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', 
+              fontSize: '12px', 
+              padding: '8px',
+              backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+              color: isDarkMode ? '#f3f4f6' : '#111827'
+            }}
+            itemStyle={{ color: isDarkMode ? '#e5e7eb' : '#374151' }}
           />
         </PieChart>
       </ResponsiveContainer>
