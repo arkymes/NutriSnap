@@ -3,7 +3,7 @@ import { analyzeFoodImage } from './services/geminiService';
 import { FoodEntry, ViewState, DayStats } from './types';
 import MacroChart from './components/MacroChart';
 import WeeklyChart from './components/WeeklyChart';
-import { CameraIcon, HomeIcon, CalendarIcon, FlameIcon, ChevronLeftIcon, MoonIcon, SunIcon } from './components/Icon';
+import { CameraIcon, HomeIcon, CalendarIcon, FlameIcon, ChevronLeftIcon, MoonIcon, SunIcon, GearIcon } from './components/Icon';
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState>('dashboard');
@@ -162,6 +162,13 @@ const App: React.FC = () => {
             <p className="text-gray-500 dark:text-gray-400 text-sm">Pronto para comer saudável?</p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setView('settings')}
+              className="p-2 rounded-full bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 shadow-sm border border-gray-100 dark:border-gray-700 active:scale-95 transition-all"
+              aria-label="Configurações"
+            >
+               <GearIcon className="w-5 h-5" />
+            </button>
             <div className="h-10 w-10 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center text-green-600 dark:text-green-300 font-bold border border-transparent dark:border-green-800">
               NS
             </div>
@@ -437,6 +444,18 @@ const App: React.FC = () => {
             <ChevronLeftIcon className="w-6 h-6" />
           </button>
           <h1 className="text-xl font-bold text-gray-800 dark:text-white ml-2 transition-colors">Configurações</h1>
+        </div>
+
+        {/* API Key Instructions */}
+        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl mb-4 border border-blue-100 dark:border-blue-900/30 transition-colors">
+            <h3 className="font-bold text-blue-800 dark:text-blue-300 mb-1">Configuração da API</h3>
+            <p className="text-xs text-blue-700 dark:text-blue-400">
+                A chave de API agora é gerenciada via variáveis de ambiente para maior segurança.
+                <br/><br/>
+                <strong>Local:</strong> Crie um arquivo <code>.env</code> com <code>API_KEY=sua_chave</code>.
+                <br/>
+                <strong>Vercel:</strong> Adicione <code>API_KEY</code> nas configurações do projeto (Environment Variables).
+            </p>
         </div>
 
         {/* Theme Toggle */}
