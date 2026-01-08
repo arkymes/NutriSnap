@@ -13,6 +13,9 @@ const App: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   
+  // Settings State
+  const [customApiKey, setCustomApiKey] = useState('');
+  
   // Dark Mode State
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('theme') === 'dark';
@@ -20,8 +23,9 @@ const App: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load from local storage on mount
+  // Load data on mount
   useEffect(() => {
+    // Load history
     const saved = localStorage.getItem('nutrisnap_entries');
     if (saved) {
       try {
@@ -30,6 +34,10 @@ const App: React.FC = () => {
         console.error("Failed to parse history", e);
       }
     }
+    
+    // Load API Key
+    const savedKey = localStorage.getItem('gemini_api_key');
+    if (savedKey) setCustomApiKey(savedKey);
   }, []);
 
   // Save to local storage whenever entries change
@@ -48,6 +56,11 @@ const App: React.FC = () => {
     }
   }, [darkMode]);
 
+  const handleSaveApiKey = () => {
+    localStorage.setItem('gemini_api_key', customApiKey);
+    alert('Chave API salva com sucesso!');
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -63,7 +76,7 @@ const App: React.FC = () => {
         const mimeType = file.type;
         const base64Data = base64String.split(',')[1];
         
-        // Call service without passing API key explicitly
+        // Call service (logic to pick key is inside service)
         const result = await analyzeFoodImage(base64Data, mimeType);
         
         const newEntry: FoodEntry = {
@@ -446,15 +459,27 @@ const App: React.FC = () => {
           <h1 className="text-xl font-bold text-gray-800 dark:text-white ml-2 transition-colors">Configurações</h1>
         </div>
 
-        {/* API Key Instructions */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl mb-4 border border-blue-100 dark:border-blue-900/30 transition-colors">
-            <h3 className="font-bold text-blue-800 dark:text-blue-300 mb-1">Configuração da API</h3>
-            <p className="text-xs text-blue-700 dark:text-blue-400">
-                A chave de API agora é gerenciada via variáveis de ambiente para maior segurança.
-                <br/><br/>
-                <strong>Local:</strong> Crie um arquivo <code>.env</code> com <code>API_KEY=sua_chave</code>.
-                <br/>
-                <strong>Vercel:</strong> Adicione <code>API_KEY</code> nas configurações do projeto (Environment Variables).
+        {/* API Key Input Section */}
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 mb-4 transition-colors">
+            <h3 className="font-bold text-gray-800 dark:text-white mb-2">Google Gemini API Key</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+              Insira sua chave API abaixo para usar o app. Ela será salva apenas no seu navegador.
+            </p>
+            <input 
+              type="password"
+              value={customApiKey}
+              onChange={(e) => setCustomApiKey(e.target.value)}
+              placeholder="Cole sua chave AIzaSy..."
+              className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-white transition-colors"
+            />
+            <button 
+              onClick={handleSaveApiKey}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg text-sm transition-colors"
+            >
+              Salvar Chave
+            </button>
+            <p className="text-[10px] text-gray-400 mt-2 text-center">
+              Você pode obter uma chave em <a href="https://aistudio.google.com/app/apikey" target="_blank" className="underline hover:text-green-500">Google AI Studio</a>.
             </p>
         </div>
 

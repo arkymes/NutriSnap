@@ -2,8 +2,14 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { FoodAnalysis } from "../types";
 
 export const analyzeFoodImage = async (base64Image: string, mimeType: string): Promise<FoodAnalysis> => {
-  // Use process.env.API_KEY directly as per guidelines
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Tenta pegar do localStorage primeiro (definido pelo usuário), senão usa a variável de ambiente
+  const apiKey = localStorage.getItem('gemini_api_key') || process.env.API_KEY;
+
+  if (!apiKey) {
+    throw new Error("Chave de API não encontrada. Por favor, configure sua API Key nas Configurações.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey: apiKey });
 
   try {
     const response = await ai.models.generateContent({
