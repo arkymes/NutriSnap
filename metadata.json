@@ -1,0 +1,7 @@
+{
+  "name": "NutriSnap AI",
+  "description": "Seu assistente nutricional inteligente. Tire uma foto da sua comida e receba instantaneamente estimativas de calorias e macros, mantendo um histórico detalhado da sua dieta.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
