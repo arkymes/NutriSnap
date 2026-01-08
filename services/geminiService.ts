@@ -1,10 +1,14 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { FoodAnalysis } from "../types";
 
-// Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+export const analyzeFoodImage = async (base64Image: string, mimeType: string, apiKey: string): Promise<FoodAnalysis> => {
+  if (!apiKey) {
+    throw new Error("Chave API não configurada. Por favor, adicione sua chave nas configurações.");
+  }
 
-export const analyzeFoodImage = async (base64Image: string, mimeType: string): Promise<FoodAnalysis> => {
+  // Initialize Gemini Client dynamically with the provided key
+  const ai = new GoogleGenAI({ apiKey });
+
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
@@ -47,6 +51,10 @@ export const analyzeFoodImage = async (base64Image: string, mimeType: string): P
 
   } catch (error) {
     console.error("Error analyzing food:", error);
+    // Propagate the specific error message if possible
+    if (error instanceof Error) {
+       throw error;
+    }
     throw new Error("Falha ao analisar a imagem. Tente novamente.");
   }
 };

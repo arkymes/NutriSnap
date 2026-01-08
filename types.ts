@@ -16,7 +16,7 @@ export interface FoodEntry extends FoodAnalysis {
   imageUrl?: string;
 }
 
-export type ViewState = 'dashboard' | 'camera' | 'calendar' | 'details';
+export type ViewState = 'dashboard' | 'camera' | 'calendar' | 'details' | 'settings';
 
 export interface DayStats {
   date: string; // ISO date string YYYY-MM-DD
