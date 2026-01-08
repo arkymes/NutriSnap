@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { analyzeFoodImage } from './services/geminiService';
 import { FoodEntry, ViewState, DayStats } from './types';
 import MacroChart from './components/MacroChart';
 import WeeklyChart from './components/WeeklyChart';
-import { CameraIcon, HomeIcon, CalendarIcon, PlusIcon, FlameIcon, ChevronLeftIcon, GearIcon, MoonIcon, SunIcon } from './components/Icon';
+import { CameraIcon, HomeIcon, CalendarIcon, FlameIcon, ChevronLeftIcon, MoonIcon, SunIcon } from './components/Icon';
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState>('dashboard');
@@ -12,12 +12,6 @@ const App: React.FC = () => {
   const [analyzedData, setAnalyzedData] = useState<FoodEntry | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  
-  // Initialize API Key from localStorage or environment variable
-  const [apiKey, setApiKey] = useState<string>(() => {
-    return localStorage.getItem('nutrisnap_api_key') || process.env.API_KEY || '';
-  });
-  const [tempApiKey, setTempApiKey] = useState<string>('');
   
   // Dark Mode State
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -36,8 +30,6 @@ const App: React.FC = () => {
         console.error("Failed to parse history", e);
       }
     }
-    // Set temp key on mount for display
-    setTempApiKey(localStorage.getItem('nutrisnap_api_key') || process.env.API_KEY || '');
   }, []);
 
   // Save to local storage whenever entries change
@@ -56,22 +48,9 @@ const App: React.FC = () => {
     }
   }, [darkMode]);
 
-  const handleSaveApiKey = () => {
-    localStorage.setItem('nutrisnap_api_key', tempApiKey);
-    setApiKey(tempApiKey);
-    setView('dashboard');
-    alert('Chave API salva com sucesso!');
-  };
-
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    if (!apiKey) {
-      alert("Por favor, configure sua chave API do Google Gemini nas configurações antes de continuar.");
-      setView('settings');
-      return;
-    }
 
     const reader = new FileReader();
     reader.onloadend = async () => {
@@ -84,8 +63,8 @@ const App: React.FC = () => {
         const mimeType = file.type;
         const base64Data = base64String.split(',')[1];
         
-        // Pass the dynamic API key here
-        const result = await analyzeFoodImage(base64Data, mimeType, apiKey);
+        // Call service without passing API key explicitly
+        const result = await analyzeFoodImage(base64Data, mimeType);
         
         const newEntry: FoodEntry = {
           ...result,
@@ -183,12 +162,6 @@ const App: React.FC = () => {
             <p className="text-gray-500 dark:text-gray-400 text-sm">Pronto para comer saudável?</p>
           </div>
           <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setView('settings')}
-              className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 shadow-sm active:scale-95 transition-all"
-            >
-              <GearIcon className="w-5 h-5" />
-            </button>
             <div className="h-10 w-10 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center text-green-600 dark:text-green-300 font-bold border border-transparent dark:border-green-800">
               NS
             </div>
@@ -485,61 +458,6 @@ const App: React.FC = () => {
                 <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${darkMode ? 'translate-x-6' : ''}`}></div>
              </button>
            </div>
-        </div>
-
-        {/* API Key Settings */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 transition-colors">
-          <div className="flex items-center gap-3 mb-4">
-             <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">
-               <GearIcon className="w-6 h-6" />
-             </div>
-             <div>
-               <h3 className="font-bold text-gray-800 dark:text-white transition-colors">Chave API do Gemini</h3>
-               <p className="text-xs text-gray-500 dark:text-gray-400">Necessária para analisar as fotos</p>
-             </div>
-          </div>
-
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 transition-colors">
-             Para usar o NutriSnap, você precisa de uma chave de API do Google Gemini.
-             <br />
-             <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline font-medium mt-1 inline-block">
-               Obter chave gratuitamente aqui
-             </a>
-          </p>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Sua Chave API</label>
-              <input 
-                type="password" 
-                value={tempApiKey}
-                onChange={(e) => setTempApiKey(e.target.value)}
-                placeholder="Ex: AIzaSy..."
-                className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl p-3 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors"
-              />
-            </div>
-
-            <button 
-              onClick={handleSaveApiKey}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold shadow-md active:scale-95 transition-all"
-            >
-              Salvar Configuração
-            </button>
-            
-            {apiKey && (
-              <button 
-                onClick={() => {
-                   localStorage.removeItem('nutrisnap_api_key');
-                   setApiKey('');
-                   setTempApiKey('');
-                   alert('Chave removida.');
-                }}
-                className="w-full text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 text-sm py-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-              >
-                Remover Chave Salva
-              </button>
-            )}
-          </div>
         </div>
         
         <div className="mt-8 text-center text-xs text-gray-400 dark:text-gray-600">

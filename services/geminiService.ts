@@ -1,13 +1,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { FoodAnalysis } from "../types";
 
-export const analyzeFoodImage = async (base64Image: string, mimeType: string, apiKey: string): Promise<FoodAnalysis> => {
-  if (!apiKey) {
-    throw new Error("Chave API não configurada. Por favor, adicione sua chave nas configurações.");
-  }
-
-  // Initialize Gemini Client dynamically with the provided key
-  const ai = new GoogleGenAI({ apiKey });
+export const analyzeFoodImage = async (base64Image: string, mimeType: string): Promise<FoodAnalysis> => {
+  // Use process.env.API_KEY directly as per guidelines
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   try {
     const response = await ai.models.generateContent({
